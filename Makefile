@@ -9,8 +9,8 @@ PG_PORT=5432
 
 PG_PWD=dataEngineering
 
-DOCKER_PATH=./redshift/docker-compose.yml
-DATABASE_SCRIPT=/db-setup/setup.sql
+DOCKER_PATH=./redshift-project/docker-compose.yml
+DATABASE_SCRIPT=/data/db-setup/setup.sql
 
 .PHONY: all up psql
 

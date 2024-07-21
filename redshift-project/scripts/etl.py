@@ -3,23 +3,28 @@ import psycopg2
 import json
 from datetime import datetime
 
+min_age = 18
+max_age = 20
+min_year = 1990
+max_year = 1992
+
 # Configuración de la conexión a la base de datos
 db_config = {
     'host': 'db',
     'port': 5432,
-    'dbname': 'data_lake_db',
+    'dbname': 'etl',
     'user': 'postgres',
     'password': 'dataEngineering'
 }
 
-def get_population_data():
-    url = 'https://api.population.io/1.0/population/World/today-and-tomorrow/'
+def get_population_data(year, age):
+    url = f'https://d6wn6bmjj722w.population.io:443/1.0/population/{year}/aged/{age}/'
     response = requests.get(url)
     data = response.json()
     return data
 
-def get_weather_data():
-    url = 'https://api.open-meteo.com/v1/forecast?latitude=35&longitude=139&hourly=temperature_2m'
+def get_weather_data(year):
+    url = f'https://archive-api.open-meteo.com/v1/archive?latitude=52.52,37.22&longitude=13.41,33.41&start_date={year}-01-01&end_date={year}-12-31&daily=apparent_temperature_max,apparent_temperature_min,daylight_duration,precipitation_sum,wind_speed_10m_max'
     response = requests.get(url)
     data = response.json()
     return data
@@ -28,15 +33,13 @@ def create_tables(conn):
     create_population_table_query = '''
     CREATE TABLE IF NOT EXISTS stage.population_data (
         id_evento SERIAL PRIMARY KEY,
-        data_evento TEXT,
-        fecha_evento DATE
+        data_evento TEXT
     );
     '''
     create_weather_table_query = '''
     CREATE TABLE IF NOT EXISTS stage.weather_data (
         id_evento SERIAL PRIMARY KEY,
-        data_evento TEXT,
-        fecha_evento DATE
+        data_evento TEXT
     );
     '''
     create_relation_table_query = '''
@@ -56,33 +59,37 @@ def create_tables(conn):
 
 def insert_population_data(conn, population_data):
     insert_query = '''
-    INSERT INTO stage.population_data (data_evento, fecha_evento)
-    VALUES (%s, %s);
+    INSERT INTO stage.population_data (data_evento)
+    VALUES (%s);
     '''
     with conn.cursor() as cursor:
-        for entry in population_data['total_population']:
+        for entry in population_data:
             data_evento = json.dumps(entry)
-            fecha_evento = datetime.strptime(entry['date'], '%Y-%m-%d').date()
-            cursor.execute(insert_query, (data_evento, fecha_evento))
+            cursor.execute(insert_query, (data_evento,))
         conn.commit()
 
 def insert_weather_data(conn, weather_data):
     insert_query = '''
-    INSERT INTO stage.weather_data (data_evento, fecha_evento)
-    VALUES (%s, %s);
+    INSERT INTO stage.weather_data (data_evento)
+    VALUES (%s);
     '''
     with conn.cursor() as cursor:
-        for i, temp in enumerate(weather_data['hourly']['temperature_2m']):
-            data_evento = json.dumps({'hour': i, 'temperature': temp})
-            fecha_evento = datetime.now().date()  # Suponiendo que la fecha es la actual
-            cursor.execute(insert_query, (data_evento, fecha_evento))
+        for entry in weather_data:
+            data_evento = json.dumps(entry)
+            cursor.execute(insert_query, (data_evento,))
         conn.commit()
 
 def main():
     # Obtener datos de las APIs
-    population_data = get_population_data()
-    weather_data = get_weather_data()
-    
+    population_data = []
+    weather_data = []
+    for x in range(min_year, max_year):
+        for y in range(min_age, max_age):
+            data = get_population_data(x, y)
+            population_data.append(data)
+            #weather_data = get_weather_data()
+        data = get_weather_data(x)
+        weather_data.append(data)
     # Conectar a la base de datos
     conn = psycopg2.connect(**db_config)
     

@@ -25,7 +25,8 @@ services:
     restart: always
     volumes:
       - ./scripts:/scripts
+      - ./requirements.txt:/requirements.txt
     working_dir: /scripts
     depends_on:
       - db
-    command: ["tail", "-f", "/dev/null"]
+    command: ["sh", "-c", "pip install -r /requirements.txt && tail -f /dev/null"]
