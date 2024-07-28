@@ -12,6 +12,10 @@ ETL de las APIS públicas
 
 ### Obtención de API Keys necesarias
 - 
+## Requerimientos
+- Para la ejecución de este proyecto, se debe disponer de Docker instalado en el equipo.
 ## Documentacion de uso de la aplicación
-1. Ejecutar el Makefile a traves de la shell con el comando `make` luego de posicionar el puntero en el directorio raiz del proyecto.
+1. Ejecutar el Makefile a traves de la shell con el comando `make all` luego de posicionar el puntero en el directorio raiz del proyecto.
+Mediante este comando se levantará el 
+Si se desea ver el listado de comandos disponibles de uso, ejecutar el comando `make` ó `make help`
 2. 

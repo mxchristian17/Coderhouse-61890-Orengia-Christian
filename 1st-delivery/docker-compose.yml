@@ -3,13 +3,13 @@ version: '3.9'
 services:
   db:
     image: postgres
-    container_name: redshift-instance 
+    container_name: ${PG_SERVICE_NAME} 
     restart: always
     shm_size: 128mb
     environment:
-      POSTGRES_PASSWORD: dataEngineering
+      POSTGRES_PASSWORD: ${PG_PWD}
     ports:
-     - 5432:5432
+     - ${PG_PORT}:${PG_PORT}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
