@@ -1,9 +1,5 @@
-DROP DATABASE IF EXISTS etl;
-CREATE DATABASE etl;
-\c etl;
-
-CREATE SCHEMA data_extraction;
-CREATE SCHEMA data_loaded;
+CREATE SCHEMA IF NOT EXISTS data_extraction;
+CREATE SCHEMA IF NOT EXISTS data_loaded;
 
 DROP TABLE IF EXISTS data_extraction.population_data;
 CREATE TABLE data_extraction.population_data (
