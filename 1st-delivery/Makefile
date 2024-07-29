@@ -45,8 +45,11 @@ show-project-details: ## show the project details
 	@echo ""
 	@echo "	\033[1;32mContainer name:\033[0m		" $(COMPOSE_PROJECT_NAME)
 	@echo "	\033[1;32mDatabase service name:\033[0m	" $(DB_SERVICE_NAME)
+	@echo "	\033[1;32mDatabase host:\033[0m		" $(DB_HOST)
 	@echo "	\033[1;32mDatabase port:\033[0m		" $(DB_PORT)
-	@echo "	\033[1;32mDatabase password:\033[0m	This is your secret..."
+	@echo "	\033[1;32mDatabase name:\033[0m		" $(DB_DATABASE)
+	@echo "	\033[1;32mDatabase username:\033[0m	" $(DB_USERNAME)
+	@echo "	\033[1;32mDatabase password:\033[0m	 This is your secret..."
 	@echo ""
 
 build: ## build the solution
@@ -55,7 +58,7 @@ build: ## build the solution
 	@echo "Waiting for the database to be ready..."
 	@while ! docker exec $(DB_SERVICE_NAME) pg_isready -U postgres; do sleep 1; done
 	@echo "Running script.sql inside the container"
-	docker exec -it $(PYTHON_CONTAINER) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)
+	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)"
 
 build-reset: ## build the solution with a container reset
 	@echo "Restarting solution"
@@ -65,11 +68,11 @@ build-reset: ## build the solution with a container reset
 	@echo "Waiting for the database to be ready..."
 	@while ! docker exec $(DB_SERVICE_NAME) pg_isready -U postgres; do sleep 1; done
 	@echo "Running script.sql inside the container"
-	@docker exec -it $(PYTHON_CONTAINER) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)
+	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)"
 
 psql: ## Open psql console
 	@echo "Opening psql console in redshift container"
-	docker exec -it $(PYTHON_CONTAINER) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE)
+	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE)"
 
 extract: ## Extract data from APIs with python script
 	@echo ""

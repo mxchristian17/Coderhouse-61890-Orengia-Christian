@@ -63,7 +63,7 @@ print(f"")
 db_config = {
     'host': os.getenv('DB_HOST'),
     'port': os.getenv('DB_PORT'),
-    'dbname': 'etl',
+    'dbname': os.getenv('DB_DATABASE'),
     'user': os.getenv('DB_USERNAME'),
     'password': os.getenv('DB_PWD')
 }
@@ -83,13 +83,13 @@ def get_weather_data(year):
 def create_tables(conn):
     create_population_table_query = '''
     CREATE TABLE IF NOT EXISTS population_data (
-        id_event SERIAL PRIMARY KEY,
-        event_data JSON
+        id_event INT IDENTITY(1,1) PRIMARY KEY,
+        event_data VARCHAR(MAX)
     );
     '''
     create_weather_table_query = '''
     CREATE TABLE IF NOT EXISTS weather_data (
-        id_event SERIAL PRIMARY KEY,
+        id_event INT IDENTITY(1,1) PRIMARY KEY,
         event_data TEXT
     );
     '''
@@ -163,17 +163,27 @@ def main():
 
     # Empty the tables if desired
     if delete_old_data:
+        print(f"    \033[1;31mDeleting old data\033[0m")
+        print(f"")
         drop_old_data(conn)
     
     # Create the tables
+    print(f"")
+    print(f"    \033[1;34mCreating tables...\033[0m")
     create_tables(conn)
     
     # Insert data into the tables
+    print(f"")
+    print(f"    \033[1;34mInserting population data...\033[0m")
     insert_population_data(conn, population_data)
+    print(f"")
+    print(f"    \033[1;34mInserting weather data...\033[0m")
     insert_weather_data(conn, weather_data)
     
     # Close the connection
     conn.close()
+    print(f"")
+    print(f"    \033[1;32mWell done!! Great job!\033[0m")
 
 if __name__ == '__main__':
     main()

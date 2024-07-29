@@ -1,15 +1,13 @@
-
 DROP TABLE IF EXISTS population_data;
 CREATE TABLE population_data (
-    id_event SERIAL PRIMARY KEY,
-    event_data JSON
+    id_event INT IDENTITY(1,1) PRIMARY KEY,
+    event_data VARCHAR(MAX)
 );
 
 DROP TABLE IF EXISTS weather_data;
 CREATE TABLE weather_data (
-    id_event SERIAL PRIMARY KEY,
-    event_data JSON,
-    event_date DATE
+    id_event INT IDENTITY(1,1) PRIMARY KEY,
+    event_data VARCHAR(MAX)
 );
 
 SELECT 
@@ -36,7 +34,7 @@ WHERE
 
 DROP TABLE IF EXISTS population_weather_relation;
 CREATE TABLE population_weather_relation (
-    id_event INT PRIMARY KEY,
+    id_event INT IDENTITY(1,1) PRIMARY KEY,
     population_change FLOAT,
     average_temperature_change FLOAT,
     location VARCHAR(100),
