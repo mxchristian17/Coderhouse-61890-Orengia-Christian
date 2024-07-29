@@ -82,19 +82,19 @@ def get_weather_data(year):
 
 def create_tables(conn):
     create_population_table_query = '''
-    CREATE TABLE IF NOT EXISTS data_extraction.population_data (
+    CREATE TABLE IF NOT EXISTS population_data (
         id_event SERIAL PRIMARY KEY,
         event_data JSON
     );
     '''
     create_weather_table_query = '''
-    CREATE TABLE IF NOT EXISTS data_extraction.weather_data (
+    CREATE TABLE IF NOT EXISTS weather_data (
         id_event SERIAL PRIMARY KEY,
         event_data TEXT
     );
     '''
     create_relation_table_query = '''
-    CREATE TABLE IF NOT EXISTS data_loaded.population_weather_relation (
+    CREATE TABLE IF NOT EXISTS population_weather_relation (
         id_event INT PRIMARY KEY,
         population_change FLOAT,
         average_temperature_change FLOAT,
@@ -110,13 +110,13 @@ def create_tables(conn):
 
 def drop_old_data(conn):
     drop_population_table_query = '''
-    DELETE FROM data_extraction.population_data;
+    DELETE FROM population_data;
     '''
     drop_weather_table_query = '''
-    DELETE FROM data_extraction.weather_data;
+    DELETE FROM weather_data;
     '''
     drop_relation_table_query = '''
-    DELETE FROM data_loaded.population_weather_relation;
+    DELETE FROM population_weather_relation;
     '''
     with conn.cursor() as cursor:
         cursor.execute(drop_population_table_query)
@@ -126,7 +126,7 @@ def drop_old_data(conn):
 
 def insert_population_data(conn, population_data):
     insert_query = '''
-    INSERT INTO data_extraction.population_data (event_data)
+    INSERT INTO population_data (event_data)
     VALUES (%s);
     '''
     with conn.cursor() as cursor:
@@ -137,7 +137,7 @@ def insert_population_data(conn, population_data):
 
 def insert_weather_data(conn, weather_data):
     insert_query = '''
-    INSERT INTO data_extraction.weather_data (event_data)
+    INSERT INTO weather_data (event_data)
     VALUES (%s);
     '''
     with conn.cursor() as cursor:

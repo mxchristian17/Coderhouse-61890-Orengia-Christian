@@ -1,14 +1,12 @@
-CREATE SCHEMA IF NOT EXISTS data_extraction;
-CREATE SCHEMA IF NOT EXISTS data_loaded;
 
-DROP TABLE IF EXISTS data_extraction.population_data;
-CREATE TABLE data_extraction.population_data (
+DROP TABLE IF EXISTS population_data;
+CREATE TABLE population_data (
     id_event SERIAL PRIMARY KEY,
     event_data JSON
 );
 
-DROP TABLE IF EXISTS data_extraction.weather_data;
-CREATE TABLE data_extraction.weather_data (
+DROP TABLE IF EXISTS weather_data;
+CREATE TABLE weather_data (
     id_event SERIAL PRIMARY KEY,
     event_data JSON,
     event_date DATE
@@ -36,8 +34,8 @@ FROM
 WHERE 
   table_name = 'weather_data';
 
-DROP TABLE IF EXISTS data_loaded.population_weather_relation;
-CREATE TABLE data_loaded.population_weather_relation (
+DROP TABLE IF EXISTS population_weather_relation;
+CREATE TABLE population_weather_relation (
     id_event INT PRIMARY KEY,
     population_change FLOAT,
     average_temperature_change FLOAT,
