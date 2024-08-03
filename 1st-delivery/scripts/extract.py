@@ -2,24 +2,21 @@ import requests
 import psycopg2
 import json
 from datetime import datetime
-from dotenv import load_dotenv # To import environmental vars
+from dotenv import load_dotenv
 import os
-from tqdm import tqdm # To show loading bars
+from tqdm import tqdm
 
 # Load credentials from credentials.env
 load_dotenv('/credentials.env')
 
 # Set default values to get from API
-
 default_min_age = 18
 default_max_age = 20
 default_min_year = 1990
 default_max_year = 1995
-
 default_delete_old_data = False
 
 # Function to get valid input with specified ranges
-
 def get_valid_input(prompt, default_value, min_value=None, max_value=None, input_type=int):
     while True:
         try:
@@ -69,16 +66,26 @@ db_config = {
 }
 
 def get_population_data(year, age):
-    url = f'https://d6wn6bmjj722w.population.io:443/1.0/population/{year}/aged/{age}/'
-    response = requests.get(url)
-    data = response.json()
-    return data
+    try:
+        url = f'https://d6wn6bmjj722w.population.io:443/1.0/population/{year}/aged/{age}/'
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        print(f"    \033[1;31mError fetching population data:\033[0m")
+        print(f"{e}")
+        return None
 
 def get_weather_data(year):
-    url = f'https://archive-api.open-meteo.com/v1/archive?latitude=52.52,37.22&longitude=13.41,33.41&start_date={year}-01-01&end_date={year}-12-31&daily=apparent_temperature_max,apparent_temperature_min,daylight_duration,precipitation_sum,wind_speed_10m_max'
-    response = requests.get(url)
-    data = response.json()
-    return data
+    try:
+        url = f'https://archive-api.open-meteo.com/v1/archive?latitude=52.52&longitude=13.41&start_date={year}-01-01&end_date={year}-12-31&daily=apparent_temperature_max,apparent_temperature_min,daylight_duration,precipitation_sum,wind_speed_10m_max'
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        print(f"    \033[1;31mError fetching weather data:\033[0m")
+        print(f"{e}")
+        return None
 
 def create_tables(conn):
     create_population_table_query = '''
@@ -155,35 +162,48 @@ def main():
     for x in tqdm(range(min_year, max_year), desc=f"    \033[1;32mProgress\033[0m", leave=True):
         for y in tqdm(range(min_age, max_age), desc=f"    Fetching data for ages in year {x}", leave=True):
             data = get_population_data(x, y)
-            population_data.append(data)
+            if data:
+                population_data.append(data)
         data = get_weather_data(x)
-        weather_data.append(data)
-    # Connect to the database
-    conn = psycopg2.connect(**db_config)
+        if data:
+            weather_data.append(data)
 
-    # Empty the tables if desired
-    if delete_old_data:
-        print(f"    \033[1;31mDeleting old data\033[0m")
+    # Connect to the database
+    try:
+        conn = psycopg2.connect(**db_config)
+    except psycopg2.Error as e:
+        print(f"    \033[1;31mError connecting to the database:\033[0m")
+        print(f"{e}")
         print(f"")
-        drop_old_data(conn)
+        return
     
-    # Create the tables
-    print(f"")
-    print(f"    \033[1;34mCreating tables...\033[0m")
-    create_tables(conn)
-    
-    # Insert data into the tables
-    print(f"")
-    print(f"    \033[1;34mInserting population data...\033[0m")
-    insert_population_data(conn, population_data)
-    print(f"")
-    print(f"    \033[1;34mInserting weather data...\033[0m")
-    insert_weather_data(conn, weather_data)
-    
-    # Close the connection
-    conn.close()
-    print(f"")
-    print(f"    \033[1;32mWell done!! Great job!\033[0m")
+    try:
+        # Empty the tables if desired
+        if delete_old_data:
+            print(f"    \033[1;31mDeleting old data\033[0m")
+            print(f"")
+            drop_old_data(conn)
+        
+        # Create the tables
+        print(f"")
+        print(f"    \033[1;34mCreating tables...\033[0m")
+        create_tables(conn)
+        
+        # Insert data into the tables
+        print(f"")
+        print(f"    \033[1;34mInserting population data...\033[0m")
+        insert_population_data(conn, population_data)
+        
+        print(f"")
+        print(f"    \033[1;34mInserting weather data...\033[0m")
+        insert_weather_data(conn, weather_data)
+        
+    finally:
+        # Ensure the connection is closed
+        conn.close()
+        print(f"")
+        print(f"    \033[1;32mWell done!! Great job!\033[0m")
+
 
 if __name__ == '__main__':
     main()

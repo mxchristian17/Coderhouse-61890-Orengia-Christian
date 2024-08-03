@@ -36,9 +36,14 @@ endif
 help: ## show this help.
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ": "}; {printf "\033[1;32m%-30s\033[0m %s\n", $$1, $$2}'
 
-all: ## Run full delivery
+all: ## Run full delivery.
+					## 1. Show project details
+					## 2. Reset and build containers
+					## 3. Extract APIs data
+					## 4. Open Redshift shell
 	@$(MAKE) show-project-details
 	@$(MAKE) build-reset
+	@$(MAKE) extract
 	@$(MAKE) psql
 
 show-project-details: ## show the project details
@@ -71,7 +76,7 @@ build-reset: ## build the solution with a container reset
 	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)"
 
 psql: ## Open psql console
-	@echo "Opening psql console in redshift container"
+	@echo "\033[1;32mOpening psql console in redshift container\033[0m"
 	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE)"
 
 extract: ## Extract data from APIs with python script
