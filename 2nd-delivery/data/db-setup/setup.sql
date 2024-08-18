@@ -13,7 +13,16 @@ CREATE TABLE population_data (
 DROP TABLE IF EXISTS weather_data;
 CREATE TABLE weather_data (
     id_event INT IDENTITY(1,1) PRIMARY KEY,
-    event_data VARCHAR(MAX)
+    date DATE,
+    latitude FLOAT,
+    longitude FLOAT,
+    elevation FLOAT,
+    wind_speed_10m_max FLOAT,
+    daylight_duration FLOAT,
+    apparent_temperature_max FLOAT,
+    apparent_temperature_min FLOAT,
+    precipitation_sum FLOAT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 SELECT 

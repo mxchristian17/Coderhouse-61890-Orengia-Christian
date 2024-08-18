@@ -20,7 +20,7 @@ COMPOSE_PROJECT_NAME=2nd-delivery-final-project
 
 DOCKER_PATH=./docker-compose.yml
 DATABASE_SCRIPT=/data/db-setup/setup.sql
-PYTHON_SCRIPT=/scripts/extract.py
+PYTHON_SCRIPT=/scripts/etl.py
 
 # Cargar variables de entorno desde credentials.env y settings.env
 ifneq (,$(wildcard credentials.env))
@@ -39,11 +39,11 @@ help: ## show this help.
 all: ## Run full delivery.
 					## 1. Show project details
 					## 2. Reset and build containers
-					## 3. Extract APIs data
+					## 3. Extract, transform and load APIs data
 					## 4. Open Redshift shell
 	@$(MAKE) show-project-details
 	@$(MAKE) build-reset
-	@$(MAKE) extract
+	@$(MAKE) etl
 	@$(MAKE) psql
 
 show-project-details: ## show the project details
@@ -79,7 +79,7 @@ psql: ## Open psql console
 	@echo "\033[1;32mOpening psql console in redshift container\033[0m"
 	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE)"
 
-extract: ## Extract data from APIs with python script
+etl: ## Extract, transform and load data from APIs with python scripts
 	@echo ""
 	@echo "\033[1;34mRunning Python script...\033[0m"
 	docker exec -it $(PYTHON_CONTAINER) python $(PYTHON_SCRIPT)
