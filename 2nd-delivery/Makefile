@@ -14,7 +14,7 @@
 ## Available command list:
 ## 
 
-# Precarga de constantes y variables de entorno
+# Load the constants and environment variables
 
 COMPOSE_PROJECT_NAME=2nd-delivery-final-project
 
@@ -22,7 +22,7 @@ DOCKER_PATH=./docker-compose.yml
 DATABASE_SCRIPT=/data/db-setup/setup.sql
 PYTHON_SCRIPT=/scripts/etl.py
 
-# Cargar variables de entorno desde credentials.env y settings.env
+# Load environmental variables from credentials.env and settings.env
 ifneq (,$(wildcard credentials.env))
     include credentials.env
     export $(shell sed 's/=.*//' credentials.env)

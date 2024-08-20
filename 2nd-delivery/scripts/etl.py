@@ -1,11 +1,11 @@
 import os
-import psycopg2
 from dotenv import load_dotenv
 from tqdm import tqdm
 from extract import get_population_data, get_weather_data
 from transform import transform_population_data, transform_weather_data
 from load import insert_population_data, insert_weather_data
-from table_management import create_tables, drop_old_data
+from table_management import create_tables, drop_old_data, Session
+from sqlalchemy.exc import SQLAlchemyError
 
 # Load credentials from credentials.env
 load_dotenv('/credentials.env')
@@ -55,23 +55,14 @@ max_year = get_valid_input("    \033[1;33mEnter end year\033[0m", default_max_ye
 latitude = get_valid_input("    \033[1;33mEnter latitude to analysis\033[0m", default_latitude, min_value=-90, max_value=90)
 longitude = get_valid_input("    \033[1;33mEnter longitude to analysis\033[0m", default_longitude, min_value=-180, max_value=180)
 
-# Here you can continue with the rest of your script, using min_age, max_age, start_year, and end_year
 print(f"")
 print(f"    \033[1;32mAge range: {min_age} - {max_age}\033[0m")
 print(f"    \033[1;32mYear range: {min_year} - {max_year}\033[0m")
 print(f"")
 
-# Configuration for the database connection
-db_config = {
-    'host': os.getenv('DB_HOST'),
-    'port': os.getenv('DB_PORT'),
-    'dbname': os.getenv('DB_DATABASE'),
-    'user': os.getenv('DB_USERNAME'),
-    'password': os.getenv('DB_PWD')
-}
 
 def main():
-    # Fetch data from the APIs
+    # Extract data from the APIs
     population_data = []
     weather_data = []
     print(f"    \033[1;34mExtracting APIs data\033[0m")
@@ -85,7 +76,7 @@ def main():
         if data:
             weather_data.append(data)
     
-    # Transform data to dataframe
+    # Transform and adapt data to dataframe
     print(f"    \033[1;34mTransforming `Population Data` data to dataframe\033[0m")
     print(f"")
     population_df = transform_population_data(population_data)
@@ -93,43 +84,47 @@ def main():
     print(f"    \033[1;34mTransforming `Weather Data` data to dataframe\033[0m")
     print(f"")
     weather_df = transform_weather_data(weather_data)
-
-    # Connect to the database
-    try:
-        conn = psycopg2.connect(**db_config)
-    except psycopg2.Error as e:
-        print(f"    \033[1;31mError connecting to the database:\033[0m")
-        print(f"{e}")
-        print(f"")
-        return
     
+    # Create database session
+    try:
+        session = Session()
+    except SQLAlchemyError as e:
+        print(f"\033[1;31mError: Unable to create a session with the database.\033[0m")
+        print(f"\033[1;31mDetails: {e}\033[0m")
+        return
+
     try:
         # Empty the tables if desired
         if delete_old_data:
             print(f"    \033[1;31mDeleting old data\033[0m")
             print(f"")
-            drop_old_data(conn)
+            drop_old_data()
         
         # Create the tables
         print(f"")
         print(f"    \033[1;34mCreating tables...\033[0m")
-        create_tables(conn)
+        create_tables()
         
         # Insert data into the tables
         print(f"")
         print(f"    \033[1;34mInserting population data...\033[0m")
-        insert_population_data(conn, population_df)
+        insert_population_data(session, population_df)
         
         print(f"")
         print(f"    \033[1;34mInserting weather data...\033[0m")
-        insert_weather_data(conn, weather_df)
+        insert_weather_data(session, weather_df)
 
         print(f"")
         print(f"    \033[1;32mWell done!! Great job!\033[0m")
+    
+    except SQLAlchemyError as e:
+        print(f"\033[1;31mError: An error occurred during the database operations.\033[0m")
+        print(f"\033[1;31mDetails: {e}\033[0m")
+        session.rollback()  # Revert changes if fails
         
     finally:
         # Ensure the connection is closed
-        conn.close()
+        session.close()
 
 
 if __name__ == '__main__':
