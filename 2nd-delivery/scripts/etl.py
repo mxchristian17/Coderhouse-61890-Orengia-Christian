@@ -1,10 +1,10 @@
-import os
 from dotenv import load_dotenv
 from tqdm import tqdm
 from extract import get_population_data, get_weather_data
 from transform import transform_population_data, transform_weather_data
 from load import insert_population_data, insert_weather_data
 from table_management import create_tables, drop_old_data, Session
+from auxiliary_functions import get_valid_input
 from sqlalchemy.exc import SQLAlchemyError
 
 # Load credentials from credentials.env
@@ -18,31 +18,6 @@ default_max_year = 1991
 default_delete_old_data = False
 default_latitude = -38.00042
 default_longitude = -57.5562
-
-# Function to get valid input with specified ranges
-def get_valid_input(prompt, default_value, min_value=None, max_value=None, input_type=int):
-    while True:
-        try:
-            value = input(f"{prompt} (default: {default_value}): ").strip()
-            if value == "":
-                value = default_value
-            elif input_type == bool:
-                if value.lower() in ['true', 't', 'yes', 'y', '1']:
-                    value = True
-                elif value.lower() in ['false', 'f', 'no', 'n', '0']:
-                    value = False
-                else:
-                    raise ValueError("Invalid boolean value")
-            else:
-                value = input_type(value)
-            if min_value is not None and value < min_value:
-                print(f"Please enter a value bigger than {min_value}.")
-            elif max_value is not None and value > max_value:
-                print(f"Please enter a value smaller than {max_value}.")
-            else:
-                return value
-        except ValueError:
-            print("Please enter a valid value.")
 
 # Request valid input from the user
 print(f"")

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, func
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -24,7 +24,7 @@ class PopulationData(Base):
     males = Column(Integer)
     year = Column(Integer)
     total = Column(Integer)
-    timestamp = Column(Date, default=func.current_date())
+    timestamp = Column(DateTime, default=func.now())
 
 class WeatherData(Base):
     __tablename__ = 'weather_data'
@@ -38,7 +38,7 @@ class WeatherData(Base):
     apparent_temperature_max = Column(Float)
     apparent_temperature_min = Column(Float)
     precipitation_sum = Column(Float)
-    timestamp = Column(Date, default=func.current_date())
+    timestamp = Column(DateTime, default=func.now())
 
 class PopulationWeatherRelation(Base):
     __tablename__ = 'population_weather_relation'
