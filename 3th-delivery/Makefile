@@ -1,6 +1,6 @@
 ## 
 ## ----------------------------------------------------------------------
-## Welcome to the 2nd delivery of the final project. Coderhouse's Data Engineering
+## Welcome to the 3th delivery of the final project. Coderhouse's Data Engineering
 ## Student: Orengia Christian
 ## Commission: 61890
 ## ----------------------------------------------------------------------
@@ -9,6 +9,7 @@
 ## - transform it to be used in the study of the relation between the
 ## wheather and the population movements around the world
 ## - Load it to a data warehouse in redshift
+## - Run everything automatized with airflow
 ## ----------------------------------------------------------------------
 ## 
 ## Available command list:
@@ -16,7 +17,7 @@
 
 # Load the constants and environment variables
 
-COMPOSE_PROJECT_NAME=2nd-delivery-final-project
+COMPOSE_PROJECT_NAME=3nd-delivery-final-project
 
 DOCKER_PATH=./docker-compose.yml
 DATABASE_SCRIPT=/data/db-setup/setup.sql
@@ -49,7 +50,7 @@ all: ## Run full delivery.
 show-project-details: ## show the project details
 	@echo ""
 	@echo "	\033[1;32mContainer name:\033[0m		" $(COMPOSE_PROJECT_NAME)
-	@echo "	\033[1;32mDatabase service name:\033[0m	" $(DB_SERVICE_NAME)
+	@echo "	\033[1;32mDatabase service name:\033[0m	" $(DB_CONTAINER)
 	@echo "	\033[1;32mDatabase host:\033[0m		" $(DB_HOST)
 	@echo "	\033[1;32mDatabase port:\033[0m		" $(DB_PORT)
 	@echo "	\033[1;32mDatabase name:\033[0m		" $(DB_DATABASE)
@@ -58,20 +59,20 @@ show-project-details: ## show the project details
 	@echo ""
 
 build: ## build the solution
-	@echo "Starting container and importing database"
+	echo "Building Airflow locally using the LocalExecutor"
+	docker-compose up -d airflow-init
+	@echo "Starting containers"
 	docker-compose -f $(DOCKER_PATH) up -d --build
-	@echo "Waiting for the database to be ready..."
-	@while ! docker exec $(DB_SERVICE_NAME) pg_isready -U postgres; do sleep 1; done
 	@echo "Running script.sql inside the container"
 	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)"
 
 build-reset: ## build the solution with a container reset
 	@echo "Restarting solution"
-	docker compose -f $(DOCKER_PATH) down
-	@echo "Starting container and importing database"
+	docker compose -f $(DOCKER_PATH) down --rmi all
+	echo "Building Airflow locally using the LocalExecutor"
+	docker-compose up -d airflow-init
+	@echo "Starting containers"
 	docker-compose -f $(DOCKER_PATH) up -d --build
-	@echo "Waiting for the database to be ready..."
-	@while ! docker exec $(DB_SERVICE_NAME) pg_isready -U postgres; do sleep 1; done
 	@echo "Running script.sql inside the container"
 	docker exec -it $(PYTHON_CONTAINER) bash -c "export PGPASSWORD=$(DB_PWD) && psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) -d $(DB_DATABASE) -f $(DATABASE_SCRIPT)"
 
@@ -87,6 +88,6 @@ etl: ## Extract, transform and load data from APIs with python scripts
 
 down: ## Clean all project
 	@echo "Clean all project"
-	docker compose -f $(DOCKER_PATH) down
+	docker compose -f $(DOCKER_PATH) down --rmi all
 
 .PHONY: show-project-details all build build-reset psql down

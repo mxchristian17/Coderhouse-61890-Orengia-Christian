@@ -1,19 +1,19 @@
-# Usar una imagen base de Python
-FROM python:3.9-slim
+FROM apache/airflow:slim-latest-python3.11
 
-# Instalar PostgreSQL client (psql)
-RUN apt-get update && apt-get install -y postgresql-client
+COPY requirements.txt /requirements.txt
 
-# Establecer el directorio de trabajo en /app
-WORKDIR /app
+RUN pip install --no-cache-dir -r /requirements.txt
 
-# Copiar los archivos necesarios al contenedor
-COPY requirements.txt requirements.txt
-COPY scripts/ scripts/
-COPY credentials.env credentials.env
+USER root
 
-# Instalar las dependencias de Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y wget
 
-# Comando por defecto
-CMD ["tail", "-f", "/dev/null"]
+COPY start.sh /start.sh
+
+RUN chmod +x /start.sh
+
+USER airflow
+
+ENTRYPOINT ["/bin/bash", "/start.sh"]
+
+EXPOSE 8080
