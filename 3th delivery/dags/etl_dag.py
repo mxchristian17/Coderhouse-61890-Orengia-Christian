@@ -20,8 +20,8 @@ default_args = {
 dag = DAG(
     'etl_dag',
     default_args=default_args,
-    description='Un DAG para ejecutar ETL cada hora',
-    schedule_interval='@hourly',  # Ejecuta cada hora
+    description='Un DAG para ejecutar ETL cada día',
+    schedule_interval='@daily',
     start_date=days_ago(1),
     catchup=False,
 )
