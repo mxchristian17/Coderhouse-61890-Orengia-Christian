@@ -18,4 +18,4 @@
 
 build: ## build the solution
 	docker compose down --volumes --remove-orphans
-	docker compose up
+	docker compose up --build --no-cache
