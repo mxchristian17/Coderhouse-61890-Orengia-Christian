@@ -15,6 +15,5 @@ ETL de las APIS públicas
 ## Requerimientos
 - Para la ejecución de este proyecto, se debe disponer de Docker instalado en el equipo.
 ## Documentacion de uso de la aplicación
-1. Ejecutar el Makefile a traves de la shell con el comando `make all` luego de posicionar el puntero en el directorio raiz del proyecto.
-Si se desea ver el listado de comandos disponibles de uso, ejecutar el comando `make` ó `make help`
-2. Ejecutar la extraccion de datos con el comando `make etl` posicionado en el directorio raiz del proyecto 
+1. Completar el archivo .env considerando como ejemplo el archivo .env.example
+2. Ejecutar el Makefile a traves de la shell con el comando `make build` luego de posicionar el puntero en el directorio raiz del proyecto.

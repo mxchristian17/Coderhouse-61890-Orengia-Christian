@@ -3,6 +3,6 @@ requests
 psycopg2-binary
 python-dotenv
 tqdm
-pandas
-SQLAlchemy
+pandas==2.2.2
+sqlAlchemy
 sqlalchemy-redshift

@@ -1,7 +1,7 @@
 from tqdm import tqdm
 from sqlalchemy import func, and_
 from sqlalchemy.orm import Session
-from table_management import PopulationData, WeatherData
+from dags_modules.table_management import PopulationData, WeatherData
 
 # Exception for duplicated rows
 class DuplicateRowError(Exception):

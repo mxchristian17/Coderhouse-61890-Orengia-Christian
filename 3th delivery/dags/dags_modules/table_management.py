@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environmental variables from .env
-load_dotenv('/credentials.env')
+load_dotenv('/.env')
 
 # Setup database using SQLAlchemy
 DATABASE_URL = f"redshift+psycopg2://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PWD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_DATABASE')}"
