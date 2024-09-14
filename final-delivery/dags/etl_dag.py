@@ -47,7 +47,7 @@ dag = DAG(
     'etl_dag',
     default_args=default_args,
     description='A DAG to run ETL in three steps: extract, transform, load',
-    schedule_interval='*/15 * * * *',
+    schedule_interval='* */4 * * *',
     start_date=days_ago(1),
     catchup=True,
 )
