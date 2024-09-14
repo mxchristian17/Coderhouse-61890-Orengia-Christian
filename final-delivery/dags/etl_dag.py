@@ -5,16 +5,11 @@ from datetime import timedelta
 from dags_modules.etl import setup_database, extract_data, transform_data, load_data
 from dags_modules.notification_manager import notify
 
-# Funciones para cada etapa del proceso
-def run_database_setup():
-    setup_database()
-
 # Function to set up the database
 def run_database_setup():
     setup_database()
 
 def run_extract(**kwargs):
-    session = kwargs['ti']
     population_data, weather_data = extract_data()
     kwargs['ti'].xcom_push(key='population_data', value=population_data)
     kwargs['ti'].xcom_push(key='weather_data', value=weather_data)
@@ -52,7 +47,7 @@ dag = DAG(
     'etl_dag',
     default_args=default_args,
     description='A DAG to run ETL in three steps: extract, transform, load',
-    schedule_interval='*/10 * * * *',
+    schedule_interval='*/15 * * * *',
     start_date=days_ago(1),
     catchup=True,
 )

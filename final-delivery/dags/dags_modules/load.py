@@ -51,7 +51,18 @@ def insert_population_data(session: Session, population_df):
         try:
             # Try to add the new entry
             session.add(population_entry)
+            session.flush()
+
+            # Iteratively check for conflicts on id_event
+            while session.query(PopulationData).filter(PopulationData.id_event == population_entry.id_event).count() > 1:
+                # If there's a conflict, increment id_event and check again
+                population_entry.id_event += 1
+                session.flush()  # Flush the updated id_event to DB without committing
+                print(f"\r    \033[1;33mConflict detected for id_event, trying {population_entry.id_event}\033[0m")
+
+            # Once we're sure there's no conflict, commit the transaction
             session.commit()
+
         except Exception as e:
             session.rollback()
             print(f"\r    \033[1;31mError inserting row {idx + 1}: {e}, skipping...\033[0m")
@@ -107,8 +118,18 @@ def insert_weather_data(session: Session, weather_df):
         max_id = max_id + 1
         
         try:
-            # Try to add the new entry
+            # Add the new entry without committing yet
             session.add(weather_entry)
+            session.flush()  # Insert the row provisionally
+
+            # Check for conflicts on id_event iteratively
+            while session.query(WeatherData).filter(WeatherData.id_event == weather_entry.id_event).count() > 1:
+                # If a conflict is detected, increment id_event and retry
+                weather_entry.id_event += 1
+                session.flush()  # Recheck with the new id_event
+                print(f"\r    \033[1;33mConflict detected for id_event, trying {weather_entry.id_event}\033[0m")
+
+            # Commit the transaction when the id_event is unique
             session.commit()
         except Exception as e:
             session.rollback()
