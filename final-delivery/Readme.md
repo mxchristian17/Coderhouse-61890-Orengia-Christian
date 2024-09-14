@@ -18,24 +18,6 @@ ETL de las APIS públicas
 1. Completar el archivo .env considerando como ejemplo el archivo .env.example
 2. Ejecutar el Makefile a traves de la shell con el comando `make build` luego de posicionar el puntero en el directorio raiz del proyecto.
 
-
-
-
-Para el proyecto final usar version 2.9 al menos
-Mandar mails si falla
-Mandar mails si termina la ejecucion
-Validar que haya ingestado correctamente
-El DAG tiene que estar completamente armado
-Utilizar Redshift
-El proyecto debe estar construido en contendores
-Debe haber una buena documentación para las tablas de las bd el Readme.md esta bien
-Mail sender o sendgrid o la cuenta de google para mandar los mails esta bien.
-Es obligatorio que envie correos
-
-Por un lado dejar un archivo sql con los archivos que crean la tabla init.sql y redshift_table.sql por ejemplo
-Ver ejemplo Semana 12 proyectofinal
-Tiene que haber una carpeta dags. Dentro los dags por ejemplo dag_etl.py y una carpeta modules
-
-Modules: data_extract.py, data_load.py, data_transform.py, mail_sender.py, ...
-Crear un Taskfile.yml (Ver ejemplo del prouyecto de muestra del profesor)
-En lo personal me gusta mas el makefile que el taskfile. Mucho mas facil a mi criterio y la funcionalidad no parece ser muy distinta.
+## Notas para el profesor
+En el archivo table_management.py del directorio dags_modules se encuentran las funciones para la creación de las tablas de Redshift.
+El programa verifica si las tablas ya existen y sino las crea. Además, en el archivo etl.py, hay una variable `default_delete_old_data = False` que si se pasa a true, ejecutará el borrado de las tablas antes de la ejecución de la ETL cada vez. No tiene tanto sentido para la ejecución por Airflow, pero tiene sentido a los fines de desarrollo y testeo.

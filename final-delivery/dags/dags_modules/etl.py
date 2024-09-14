@@ -17,100 +17,89 @@ default_delete_old_data = False
 default_latitude = -38.00042
 default_longitude = -57.5562
 
-def etl_process():
-
-    # Create database session
+# Extract phase
+def extract_data():
     try:
         session = Session()
-    except SQLAlchemyError as e:
-        print(f"\033[1;31mError: Unable to create a session with the database.\033[0m")
-        print(f"\033[1;31mDetails: {e}\033[0m")
-        return
-    
-    try:
-        # Empty the tables if desired
-        delete_old_data = default_delete_old_data
-
-        if delete_old_data:
-            print(f"\033[1;31mDeleting old data\033[0m")
-            drop_old_data()
-        
-        # Create the tables
-        print(f"\033[1;34mCreating tables...\033[0m")
-        create_tables()
-    except SQLAlchemyError as e:
-        print(f"\033[1;31mError: Unable to manage database tables.\033[0m")
-        print(f"\033[1;31mDetails: {e}\033[0m")
-        return
-    
-    try:
         max_database_year = get_max_year_population(session)
-    except Exception as e:
-        error_message = f"Error obtaining max year from database: {e}"
-        print(error_message)
-        raise RuntimeError(error_message) from e
+    except SQLAlchemyError as e:
+        print(f"Error: Unable to create a session with the database. Details: {e}")
+        raise RuntimeError(e)
 
-    # Search values for ETL
     min_age = default_min_age
     max_age = default_max_age
-    min_year = max_database_year+1
-    max_year = max_database_year+2
+    min_year = max_database_year + 1
+    max_year = max_database_year + 2
     latitude = default_latitude
     longitude = default_longitude
 
-    # Extract data from the APIs
     try:
-
         population_data = []
         weather_data = []
-        print(f"\033[1;34mExtracting APIs data\033[0m")
+        print("Extracting APIs data")
         for x in range(min_year, max_year):
-            print(f"\033[1;32mProgress: Year {x}\033[0m")
             for y in range(min_age, max_age):
-                print(f"Fetching data for ages in year {x}")
                 data = get_population_data(x, y)
                 if data:
                     population_data.append(data)
-            data = get_weather_data(x, latitude, longitude)
-            if data:
-                weather_data.append(data)
+            weather = get_weather_data(x, latitude, longitude)
+            if weather:
+                weather_data.append(weather)
+
+        return population_data, weather_data
 
     except Exception as e:
-        error_message = f"Error obtaining APIs data: {e}"
-        print(error_message)
-        raise RuntimeError(error_message) from e
-    
-    # Transform and adapt data to dataframe
+        print(f"Error obtaining API data: {e}")
+        raise RuntimeError(e)
+
+# Transform phase
+def transform_data(population_data, weather_data):
     try:
-        print(f"\033[1;34mTransforming 'Population Data' to dataframe\033[0m")
+        print("Transforming Population Data to dataframe")
         population_df = transform_population_data(population_data)
 
-        print(f"\033[1;34mTransforming 'Weather Data' to dataframe\033[0m")
+        print("Transforming Weather Data to dataframe")
         weather_df = transform_weather_data(weather_data)
 
-    except Exception as e:
-        error_message = f"Error during data transformation: {e}"
-        print(error_message)
-        raise RuntimeError(error_message) from e
-    
-    
+        return population_df, weather_df
 
+    except Exception as e:
+        print(f"Error during data transformation: {e}")
+        raise RuntimeError(e)
+
+# Load phase
+def load_data(population_df, weather_df):
     try:
-        
-        # Insert data into the tables
-        print(f"\033[1;34mInserting population data...\033[0m")
+        session = Session()
+
+        # Insert data into tables
+        print("Inserting population data...")
         insert_population_data(session, population_df)
-        
-        print(f"\033[1;34mInserting weather data...\033[0m")
+
+        print("Inserting weather data...")
         insert_weather_data(session, weather_df)
 
-        print(f"\033[1;32mWell done!! Great job!\033[0m")
-    
+        print("Data successfully loaded.")
+
     except SQLAlchemyError as e:
-        print(f"\033[1;31mError: An error occurred during the database operations.\033[0m")
-        print(f"\033[1;31mDetails: {e}\033[0m")
-        session.rollback()  # Revert changes if fails
-        
+        print(f"Database error: {e}")
+        session.rollback()
+        raise RuntimeError(e)
+    
     finally:
-        # Ensure the connection is closed
         session.close()
+
+# Create and drop tables
+def setup_database():
+    try:
+        delete_old_data = default_delete_old_data
+        if delete_old_data:
+            print("Deleting old data")
+            drop_old_data()
+
+        print("Creating tables")
+        create_tables()
+
+    except SQLAlchemyError as e:
+        print(f"Error managing database tables: {e}")
+        raise RuntimeError(e)

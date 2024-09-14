@@ -2,14 +2,37 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
-from dags_modules.etl import etl_process
+from dags_modules.etl import setup_database, extract_data, transform_data, load_data
 from dags_modules.notification_manager import notify
 
-def run_etl_script():
-    etl_process()
-# Function to send failure notification with error details
+# Funciones para cada etapa del proceso
+def run_database_setup():
+    setup_database()
+
+# Function to set up the database
+def run_database_setup():
+    setup_database()
+
+def run_extract(**kwargs):
+    session = kwargs['ti']
+    population_data, weather_data = extract_data()
+    kwargs['ti'].xcom_push(key='population_data', value=population_data)
+    kwargs['ti'].xcom_push(key='weather_data', value=weather_data)
+
+def run_transform(**kwargs):
+    population_data = kwargs['ti'].xcom_pull(key='population_data', task_ids='extract_task')
+    weather_data = kwargs['ti'].xcom_pull(key='weather_data', task_ids='extract_task')
+    population_df, weather_df = transform_data(population_data, weather_data)
+    kwargs['ti'].xcom_push(key='population_df', value=population_df)
+    kwargs['ti'].xcom_push(key='weather_df', value=weather_df)
+
+def run_load(**kwargs):
+    population_df = kwargs['ti'].xcom_pull(key='population_df', task_ids='transform_task')
+    weather_df = kwargs['ti'].xcom_pull(key='weather_df', task_ids='transform_task')
+    load_data(population_df, weather_df)
+
 def notify_failure(context):
-    exception = context.get('exception')  # Capture the exception from the task context
+    exception = context.get('exception')
     error_message = str(exception) if exception else "Unknown error occurred"
     notify("failure", error_message)
     print(error_message)
@@ -22,22 +45,43 @@ default_args = {
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=1),
-    'on_failure_callback': notify_failure,  # Trigger notification on failure
+    'on_failure_callback': notify_failure,
 }
 
 dag = DAG(
     'etl_dag',
     default_args=default_args,
-    description='A DAG to run ETL every 10 minutes',
+    description='A DAG to run ETL in three steps: extract, transform, load',
     schedule_interval='*/10 * * * *',
     start_date=days_ago(1),
     catchup=True,
 )
 
 # Define the ETL task
-run_etl = PythonOperator(
-    task_id='run_etl_task',
-    python_callable=run_etl_script,
+setup_database_task = PythonOperator(
+    task_id='setup_database_task',
+    python_callable=run_database_setup,
+    provide_context=True,
+    dag=dag,
+)
+
+extract_task = PythonOperator(
+    task_id='extract_task',
+    python_callable=run_extract,
+    provide_context=True,
+    dag=dag,
+)
+
+transform_task = PythonOperator(
+    task_id='transform_task',
+    python_callable=run_transform,
+    provide_context=True,
+    dag=dag,
+)
+
+load_task = PythonOperator(
+    task_id='load_task',
+    python_callable=run_load,
     provide_context=True,
     dag=dag,
 )
@@ -50,4 +94,4 @@ send_success_notification = PythonOperator(
 )
 
 # Define task sequence
-run_etl >> send_success_notification
+setup_database_task >> extract_task >> transform_task >> load_task >> send_success_notification
