@@ -49,6 +49,7 @@ dag = DAG(
     description='A DAG to run ETL in three steps: extract, transform, load',
     schedule_interval='* */4 * * *',
     start_date=days_ago(1),
+    concurrency=3, # Limit concurrent tasks
     catchup=True,
 )
 
