@@ -16,11 +16,6 @@ def insert_population_data(session: Session, population_df):
     print(population_df.head())
     print("")
 
-    max_id = session.query(func.max(PopulationData.id_event)).scalar()
-    if max_id is None:
-        max_id = 0
-
-
     for idx, row in tqdm(population_df.iterrows(), total=population_df.shape[0], desc=f"    \033[1;32mProgress\033[0m"):
         # Check if the row already exists in the database
         existing_row = session.query(PopulationData).filter(
@@ -37,6 +32,10 @@ def insert_population_data(session: Session, population_df):
         if existing_row:
             print(f"\r    \033[1;33mRow {idx + 1} already exists, skipping...\033[0m")
             continue
+
+        max_id = session.query(func.max(PopulationData.id_event)).scalar()
+        if max_id is None:
+            max_id = 0
 
         population_entry = PopulationData(
             id_event=max_id + 1,
