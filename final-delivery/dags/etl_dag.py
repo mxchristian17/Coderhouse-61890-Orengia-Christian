@@ -50,7 +50,7 @@ dag = DAG(
     schedule_interval='0 */4 * * *',
     start_date=days_ago(1),
     concurrency=3, # Limit concurrent tasks
-    catchup=False,
+    catchup=True,
 )
 
 # Define the ETL task
