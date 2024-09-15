@@ -35,7 +35,7 @@ def notify_failure(context):
 # DAG definition
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': False,
+    'depends_on_past': True,
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -47,10 +47,10 @@ dag = DAG(
     'etl_dag',
     default_args=default_args,
     description='A DAG to run ETL in three steps: extract, transform, load',
-    schedule_interval='* */4 * * *',
+    schedule_interval='0 */4 * * *',
     start_date=days_ago(1),
     concurrency=3, # Limit concurrent tasks
-    catchup=True,
+    catchup=False,
 )
 
 # Define the ETL task
